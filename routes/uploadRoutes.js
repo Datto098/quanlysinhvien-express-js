@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
-const multerStorageCloudinary = require('multer-storage-cloudinary');
+const { CloudinaryStorage } = require('multer-storage-cloudinary'); // Import đúng cách
 
 // Cấu hình Cloudinary
 cloudinary.config({
@@ -12,8 +12,8 @@ cloudinary.config({
 });
 
 // Cấu hình Multer để lưu ảnh vào Cloudinary
-const storage = multerStorageCloudinary({
-	cloudinary: cloudinary,
+const storage = new CloudinaryStorage({
+	cloudinary: cloudinary, // Cloudinary instance đã cấu hình
 	params: {
 		folder: 'comments', // Thư mục trên Cloudinary
 		format: 'jpg', // Định dạng ảnh
@@ -35,7 +35,7 @@ router.post('/image', upload.single('image'), (req, res) => {
 	}
 
 	// Lấy đường dẫn ảnh từ Cloudinary
-	const imageUrl = req.file.secure_url; // Cloudinary trả về URL an toàn của ảnh
+	const imageUrl = req.file.path; // Cloudinary trả về URL an toàn của ảnh
 
 	res.json({ url: imageUrl });
 });

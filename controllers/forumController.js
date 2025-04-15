@@ -1,8 +1,6 @@
 const ForumPost = require('../models/Forum');
 const Comment = require('../models/Comment');
-const fs = require('fs');
-const path = require('path');
-const cloudinary = require('cloudinary').v2; // Import Cloudinary
+const cloudinary = require('cloudinary').v2;
 
 exports.createPost = async (req, res) => {
 	try {

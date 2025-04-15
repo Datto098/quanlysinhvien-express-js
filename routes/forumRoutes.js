@@ -4,7 +4,7 @@ const forumController = require('../controllers/forumController');
 const authMiddleware = require('../middleware/authMiddleware');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
-const multerStorageCloudinary = require('multer-storage-cloudinary');
+const { CloudinaryStorage } = require('multer-storage-cloudinary'); // Import đúng cách
 
 // Cấu hình Cloudinary
 cloudinary.config({
@@ -13,8 +13,8 @@ cloudinary.config({
 	api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Cấu hình Multer để lưu ảnh vào Cloudinary
-const storage = multerStorageCloudinary({
+// Sử dụng CloudinaryStorage
+const storage = new CloudinaryStorage({
 	cloudinary: cloudinary,
 	params: {
 		folder: 'thumbnails', // Thư mục trên Cloudinary
@@ -23,7 +23,7 @@ const storage = multerStorageCloudinary({
 	},
 });
 
-// Cấu hình Multer với Cloudinary
+// Khởi tạo multer với cấu hình Cloudinary storage
 const upload = multer({
 	storage: storage,
 	limits: { fileSize: 10 * 1024 * 1024 }, // Giới hạn kích thước file là 10MB
