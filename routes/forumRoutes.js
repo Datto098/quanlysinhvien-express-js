@@ -3,20 +3,27 @@ const router = express.Router();
 const forumController = require('../controllers/forumController');
 const authMiddleware = require('../middleware/authMiddleware');
 const multer = require('multer');
-const path = require('path');
+const cloudinary = require('cloudinary').v2;
+const multerStorageCloudinary = require('multer-storage-cloudinary');
 
-// Cấu hình multer để lưu file trong thư mục tạm
-const storage = multer.diskStorage({
-	destination: (req, file, cb) => {
-		cb(null, './uploads/thumbnails'); // Thư mục tạm thời để lưu file
-	},
-	filename: (req, file, cb) => {
-		const fileName = Date.now() + path.extname(file.originalname); // Tên file duy nhất
-		cb(null, fileName);
+// Cấu hình Cloudinary
+cloudinary.config({
+	cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+	api_key: process.env.CLOUDINARY_API_KEY,
+	api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Cấu hình Multer để lưu ảnh vào Cloudinary
+const storage = multerStorageCloudinary({
+	cloudinary: cloudinary,
+	params: {
+		folder: 'thumbnails', // Thư mục trên Cloudinary
+		format: 'jpg', // Định dạng ảnh
+		public_id: (req, file) => Date.now(), // Tạo ID duy nhất cho ảnh
 	},
 });
 
-// Cấu hình multer với giới hạn kích thước file (10MB)
+// Cấu hình Multer với Cloudinary
 const upload = multer({
 	storage: storage,
 	limits: { fileSize: 10 * 1024 * 1024 }, // Giới hạn kích thước file là 10MB

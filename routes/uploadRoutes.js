@@ -1,33 +1,42 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-// Cấu hình Multer để lưu trữ ảnh
+const cloudinary = require('cloudinary').v2;
+const multerStorageCloudinary = require('multer-storage-cloudinary');
 
-// Cấu hình storage của multer
-const storage = multer.diskStorage({
-	destination: function (req, file, cb) {
-		cb(null, 'uploads/comments'); // Chỉ định thư mục lưu trữ file
-	},
-	filename: function (req, file, cb) {
-		const ext = file.mimetype.split('/')[1]; // Đặt đuôi file là .jpg mặc định
-		console.log(ext);
-		const filename = Date.now() + '.' + ext; // Thêm timestamp vào tên file để tránh trùng lặp
-		cb(null, filename); // Đặt tên file
+// Cấu hình Cloudinary
+cloudinary.config({
+	cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+	api_key: process.env.CLOUDINARY_API_KEY,
+	api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Cấu hình Multer để lưu ảnh vào Cloudinary
+const storage = multerStorageCloudinary({
+	cloudinary: cloudinary,
+	params: {
+		folder: 'comments', // Thư mục trên Cloudinary
+		format: 'jpg', // Định dạng ảnh
+		public_id: (req, file) => Date.now(), // Tạo ID duy nhất cho ảnh
 	},
 });
 
-// Khởi tạo multer với cấu hình trên
-const upload = multer({ storage: storage });
+// Khởi tạo multer với Cloudinary storage
+const upload = multer({
+	storage: storage,
+	limits: { fileSize: 10 * 1024 * 1024 }, // Giới hạn kích thước file là 10MB
+});
 
 // API upload ảnh
 router.post('/image', upload.single('image'), (req, res) => {
-	// Kiểm tra xem ảnh có được tải lên hay không
+	// Kiểm tra xem ảnh có được tải lên không
 	if (!req.file) {
 		return res.status(400).json({ message: 'Không có ảnh được tải lên' });
 	}
 
-	// Lấy đường dẫn ảnh
-	const imageUrl = `/uploads/comments/${req.file.filename}`;
+	// Lấy đường dẫn ảnh từ Cloudinary
+	const imageUrl = req.file.secure_url; // Cloudinary trả về URL an toàn của ảnh
+
 	res.json({ url: imageUrl });
 });
 
