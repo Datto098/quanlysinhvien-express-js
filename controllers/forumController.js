@@ -2,8 +2,8 @@ const ForumPost = require('../models/Forum');
 const Comment = require('../models/Comment');
 const fs = require('fs');
 const path = require('path');
+const cloudinary = require('cloudinary').v2; // Import Cloudinary
 
-// Tạo bài viết mới
 exports.createPost = async (req, res) => {
 	try {
 		const { title, content, category, author } = req.body;
@@ -15,27 +15,15 @@ exports.createPost = async (req, res) => {
 
 		// Kiểm tra nếu có file ảnh thumbnail
 		if (req.file) {
-			// Đảm bảo thư mục upload tồn tại
-			const uploadDir = path.join(
-				__dirname,
-				'..',
-				'uploads',
-				'thumbnails'
-			);
+			// Upload ảnh lên Cloudinary
+			const result = await cloudinary.uploader.upload(req.file.path, {
+				folder: 'thumbnails', // Thư mục trên Cloudinary để lưu ảnh
+				public_id: Date.now(), // Tạo ID duy nhất cho ảnh
+				resource_type: 'image', // Chỉ định loại tài nguyên là hình ảnh
+			});
 
-			if (!fs.existsSync(uploadDir)) {
-				fs.mkdirSync(uploadDir, { recursive: true });
-			}
-
-			// Tạo tên file duy nhất cho ảnh
-			const fileName = Date.now() + path.extname(req.file.originalname);
-			const filePath = path.join(uploadDir, fileName);
-
-			// Di chuyển ảnh vào thư mục uploads/thumbnails
-			fs.renameSync(req.file.path, filePath);
-
-			// Lưu URL của ảnh
-			thumbnailUrl = '/uploads/thumbnails/' + fileName;
+			// Lưu URL của ảnh Cloudinary
+			thumbnailUrl = result.secure_url; // URL an toàn từ Cloudinary
 			console.log(thumbnailUrl);
 		}
 
